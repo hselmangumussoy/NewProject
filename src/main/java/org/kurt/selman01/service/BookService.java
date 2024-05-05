@@ -19,13 +19,13 @@ public class BookService {
     }
 
     public BookDto save(BookDto bookDto) {
-        Book book = toBook(bookDto);
+        Book book = toDto(bookDto);
 
         if (!authorService.isExist(book.name)){
             throw new EntityNotFoundException(bookDto.authorId +" yazar bulunamadı");
         }
 
-        return bookRepository.save(book);
+        return toDto(bookRepository.save(book));
     }
 
     public Book get(int id) {
@@ -59,14 +59,14 @@ public class BookService {
         return isBook;
     }
 
-    public  Book toBook(BookDto bookDto){
+    public  Book toDto(BookDto bookDto){
         Book book = new Book();
         book.setName(bookDto.name) ;
         book.setPages(bookDto.pages);
         return book;
     }
 
-    public BookDto fromBook(Book book){
+    public BookDto toEntity(Book book){
 
         BookDto bookDto= new BookDto();
         bookDto.name= book.getName();
