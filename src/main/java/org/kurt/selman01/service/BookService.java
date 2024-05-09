@@ -3,74 +3,72 @@ package org.kurt.selman01.service;
 import jakarta.persistence.EntityNotFoundException;
 import org.kurt.selman01.dto.AuthorDto;
 import org.kurt.selman01.dto.BookDto;
-import org.kurt.selman01.entity.Author;
 import org.kurt.selman01.entity.Book;
 import org.kurt.selman01.repository.BookRepository;
 import org.springframework.stereotype.Service;
 
 @Service
 public class BookService {
-    BookRepository bookRepository;
+    BookRepository repository;
     AuthorService authorService;
 
     BookService(BookRepository bookRepository, AuthorService authorService) {
-        this.bookRepository = bookRepository;
+        this.repository = bookRepository;
         this.authorService = authorService;
     }
 
-    public BookDto save(BookDto bookDto) {
-        Book book = toDto(bookDto);
-
-        if (!authorService.isExist(book.name)){
-            throw new EntityNotFoundException(bookDto.authorId +" yazar bulunamadı");
-        }
-
-        return toDto(bookRepository.save(book));
+    public BookDto save(BookDto dto) {
+        Book newBook = toEntity(dto);
+        repository.save(newBook);
+        return toDto(newBook);
     }
 
-    public Book get(int id) {
-        return bookRepository.findById(id).get();
+    public BookDto get(int id) {
+        Book book = repository.findById(id).orElseThrow(
+                () -> new EntityNotFoundException(id +"'li kitap bulunamadı")
+        );
+        return toDto(book);
     }
 
     public String delete(int id) {
-        if(bookRepository.findById(id).get() == null){
-            return id +"'li yazar bulunamadı";
+        if(repository.findById(id).get() == null){
+            return id +"'li kitap bulunamadı";
         }
-        bookRepository.deleteById(id);
-        return id +"'li yazar silindi";
+        repository.deleteById(id);
+        return id +"'li kitap silindi";
     }
 
-    public Book update(int bookId, Book newBook) {
-        Book oldbook = bookRepository.findById(bookId).orElseThrow(
-                () -> new EntityNotFoundException(bookId +"'li yazar bulunamadı")
+    public BookDto update(int bookId, BookDto newBook) {
+        Book oldbook = repository.findById(bookId).orElseThrow(
+                () -> new EntityNotFoundException(bookId +"'li kitap bulunamadı")
         );
+        oldbook = setBook(oldbook, newBook);
+        repository.save(oldbook);
+        return toDto(oldbook);
+    }
+
+    private Book setBook(Book oldbook, BookDto newBook) {
         oldbook.name = newBook.name;
         oldbook.pages = newBook.pages;
-        return bookRepository.save(oldbook);
+        oldbook.authorId = newBook.author.id;
+        return oldbook;
     }
 
-    public Boolean checkBook(Book book) {
-        //boolean primitive, metod yok; Boolean gelişmiş
-        boolean isBook = bookRepository.existsById(book.id);
-        if (!isBook) {
-            throw new EntityNotFoundException(book.id+ "bulunamadı");
-        }
-
-        return isBook;
+    public BookDto toDto(Book book){
+        BookDto dto = new BookDto();
+        dto.id = book.id;
+        dto.name = book.name;
+        dto.pages = book.pages;
+        dto.author.id = book.authorId;
+        return dto;
     }
 
-    public  Book toDto(BookDto bookDto){
+    public Book toEntity(BookDto dto){
         Book book = new Book();
-        book.setName(bookDto.name) ;
-        book.setPages(bookDto.pages);
+        book.name = dto.name;
+        book.pages = dto.pages;
+        AuthorDto authorDto = authorService.get(dto.author.id);
+        book.authorId = authorDto.id;
         return book;
-    }
-
-    public BookDto toEntity(Book book){
-
-        BookDto bookDto= new BookDto();
-        bookDto.name= book.getName();
-        bookDto.pages =book.getPages();
-        return bookDto;
     }
 }

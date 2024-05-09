@@ -3,12 +3,11 @@ package org.kurt.selman01.controller;
 import org.kurt.selman01.dto.BookDto;
 import org.kurt.selman01.entity.Author;
 import org.kurt.selman01.entity.Book;
-import org.kurt.selman01.response.BookResponse;
 import org.kurt.selman01.service.BookService;
 import org.springframework.web.bind.annotation.*;
 
-@RestController//Spring MVC controller sınınıfının RESTful web servisi olarak işlev göreceğini belirtir. Yani, bu sınıfın içindeki metodlar HTTP isteklerine cevap verecek ve genellikle JSON veya XML gibi veri formatlarını kullanarak ver döndürecektir.
-@RequestMapping("/books")//Bir controller sınıfında veya yönteminde belirli bir HTTP isteği metoduna karşılık gelen bir URL yolu (endpoint) belirler.
+@RestController
+@RequestMapping("/books")
 public class BookController {
     BookService bookService;
     BookController (BookService bookService) {
@@ -16,20 +15,12 @@ public class BookController {
     }
 
     @PostMapping
-    public BookResponse save(@RequestBody BookDto bookDto) {
-        BookDto result = bookService.save(bookDto);
-        BookResponse response = new BookResponse();
-        response.bookDto = result;
-        return response;
-    }
-
-    @PostMapping("/checkBook")
-    public Boolean checkBook(@RequestBody Book book){
-        return bookService.checkBook(book);
+    public BookDto save(@RequestBody BookDto book) {
+        return bookService.save(book);
     }
 
     @GetMapping("{id}")
-    public Book get(@PathVariable int id) {
+    public BookDto get(@PathVariable int id) {
         return bookService.get(id);
     }
 
@@ -39,7 +30,7 @@ public class BookController {
     }
 
     @PutMapping("{id}")
-    public Book update(@PathVariable int id, @RequestBody Book newBook) {
+    public BookDto update(@PathVariable int id, @RequestBody BookDto newBook) {
         return bookService.update(id, newBook);
     }
 }

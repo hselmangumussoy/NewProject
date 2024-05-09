@@ -3,60 +3,62 @@ package org.kurt.selman01.service;
 import jakarta.persistence.EntityNotFoundException;
 import org.kurt.selman01.dto.AuthorDto;
 import org.kurt.selman01.entity.Author;
-import org.kurt.selman01.entity.Book;
 import org.kurt.selman01.repository.AuthorRepository;
-import org.kurt.selman01.repository.BookRepository;
 import org.springframework.stereotype.Service;
 
 @Service
 public class AuthorService {
-    AuthorRepository authorRepository;
+    AuthorRepository repository;
     AuthorService(AuthorRepository authorRepository) {
-        this.authorRepository = authorRepository;
+        this.repository = authorRepository;
     }
-    public AuthorDto save(AuthorDto authorDto) {
-        Author author = toEntity(authorDto);
-        author = authorRepository.save(author);
+    public AuthorDto save(AuthorDto dto) {
+        Author author = toEntity(dto);
+        repository.save(author);
         return toDto(author);
     }
-    public Author get(int id) {
-        return authorRepository.findById(id).get();
+
+    public AuthorDto get(int id) {
+        Author author = repository.findById(id).orElseThrow(
+                () -> new EntityNotFoundException(id +"'li yazar bulunamadı"));
+        return toDto(author);
     }
 
     public String delete(int id) {
-        if(authorRepository.findById(id).get() == null){
+        if(repository.findById(id).get() == null){
             return id +"'li yazar bulunamadı";
         }
-        authorRepository.deleteById(id);
+        repository.deleteById(id);
         return id +"'li yazar silindi";
     }
 
-    public Author update(int authorId, Author author) {
-        Author oldAuthor = authorRepository.findById(authorId).orElseThrow(
+    public AuthorDto update(int authorId, AuthorDto author) {
+        Author oldAuthor = repository.findById(authorId).orElseThrow(
                 () -> new EntityNotFoundException(authorId +"'li yazar bulunamadı")
         );
-        oldAuthor.getName() = author.getName();
-        oldAuthor.getAge() = author.getAge();
-        return authorRepository.save(oldAuthor);
+        oldAuthor = setAuthor(oldAuthor, author);
+        repository.save(oldAuthor);
+        return toDto(oldAuthor);
     }
 
-    public boolean isExist(int authorId){
-        return  authorRepository.existsById(authorId);
-    }
-
-    public  Author toEntity(AuthorDto authorDto){
-        Author author = new Author();
-        author.setAge(authorDto.age);
-        author.setName(authorDto.name);
-
-        return author;
+    private Author setAuthor(Author oldAuthor, AuthorDto author) {
+        oldAuthor.name = author.name;
+        oldAuthor.age = author.age;
+        return oldAuthor;
     }
 
     public AuthorDto toDto(Author author){
+        AuthorDto dto = new AuthorDto();
+        dto.id = author.id;
+        dto.name = author.name;
+        dto.age = author.age;
+        return dto;
+    }
 
-        AuthorDto authorDto= new AuthorDto();
-        authorDto.age = author.getAge();
-        authorDto.name =author.getName();
-        return authorDto;
+    public Author toEntity(AuthorDto dto){
+        Author author = new Author();
+        author.name = dto.name;
+        author.age = dto.age;
+        return author;
     }
 }
